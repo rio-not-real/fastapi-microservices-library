@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Annotated, Literal
 
 from pydantic import (
@@ -15,18 +14,12 @@ from fml.constants import ABOUT_BLANK
 from fml.utils import dt_to_utc_str, utc_now
 
 
-def ser_dt(val: datetime):
-    if isinstance(val, datetime):
-        return dt_to_utc_str(val)
-    raise ValueError
-
-
 class CustomBaseModel(BaseModel): ...
 
 
 class HealthCheck(CustomBaseModel):
     status: Literal["pass", "warn", "fail"]
-    timestamp: Annotated[AwareDatetime, PlainSerializer(ser_dt)] = utc_now()
+    timestamp: Annotated[AwareDatetime, PlainSerializer(dt_to_utc_str)] = utc_now()
 
 
 class ErrorDetails(CustomBaseModel):
