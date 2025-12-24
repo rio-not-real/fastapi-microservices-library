@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 class CustomHTTPException(HTTPException):
-    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    detail = "The server encountered an unexpected error"
-    _title = "Server Error"
-    _problems_registry = "https://problems-registry.smartbear.com/{problem}/"
+    status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
+    detail: str = "The server encountered an unexpected error"
+    _title: str = "Server Error"
+    _problems_registry: str = "https://problems-registry.smartbear.com/{problem}/"
 
     def __init__(
         self, detail: str | None = None, headers: dict[str, str] | None = None
-    ):
+    ) -> None:
         super().__init__(
             status_code=self.status_code,
             detail=detail or self.detail,
@@ -33,15 +33,15 @@ class CustomHTTPException(HTTPException):
         return f"{self.status_code} {self._title}: {self.detail}"
 
     def __repr__(self) -> str:
-        class_name = self.__class__.__name__
+        class_name: str = self.__class__.__name__
         return (
             f"{class_name}(status_code={self.status_code!r},"
-            " title={self._title!r}, detail={self.detail!r})"
+            f" title={self._title!r}, detail={self.detail!r})"
         )
 
     @property
     def type(self) -> str:
-        problem = self._title.lower().replace(" ", "-")
+        problem: str = self._title.lower().replace(" ", "-")
         return self._problems_registry.format(problem=problem)
 
 
@@ -106,9 +106,10 @@ class ProblemDetailsResponse(ORJSONResponse):
         headers: dict[str, str] | None = None,
         background: BackgroundTask | None = None,
         **kwargs,
-    ):
-        problem_details = ProblemDetails.model_validate(kwargs)
-        headers = {"Content-Type": "application/problem+json"}
+    ) -> None:
+        problem_details: ProblemDetails = ProblemDetails.model_validate(kwargs)
+        headers = headers or {}
+        headers["Content-Type"] = "application/problem+json"
 
         super().__init__(
             content=problem_details.model_dump(exclude_none=True),
@@ -122,7 +123,7 @@ class ProblemDetailsResponse(ORJSONResponse):
 async def unhandled_exception_handler(
     _: Request, exc: Exception
 ) -> ProblemDetailsResponse:
-    logger.error(exc)
+    logger.error(str(exc))
     return ProblemDetailsResponse(
         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         title=HTTP_500_TITLE,
@@ -152,8 +153,8 @@ async def pydantic_validation_error_handler(
     errors: list[ErrorDetails] = []
 
     for err in exc.errors():
-        detail = f"[{err.get('type', unknown)}] {err.get('msg', unknown)}"
-        pointer = "/".join(
+        detail: str = f"[{err.get('type', unknown)}] {err.get('msg', unknown)}"
+        pointer: str = "/".join(
             field for field in err.get("loc", ()) if isinstance(field, str)
         )
         errors.append(
