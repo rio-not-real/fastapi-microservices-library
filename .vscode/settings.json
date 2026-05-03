@@ -1,10 +1,8 @@
 {
   "editor.formatOnSave": true,
-  "python.languageServer": "None",
+  "editor.defaultFormatter": "EditorConfig.EditorConfig",
+  "python.terminal.useEnvFile": true,
   "[python]": {
-    "editor.defaultFormatter": "charliermarsh.ruff",
-  },
-  "[toml]": {
-    "editor.formatOnSave": false
+    "editor.defaultFormatter": "charliermarsh.ruff"
   }
 }
