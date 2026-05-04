@@ -1,18 +1,18 @@
 import orjson
 import pytest
-from fastapi.responses import ORJSONResponse
 from starlette.background import BackgroundTask
 from starlette.exceptions import HTTPException
 
-from fml.exceptions import CustomHTTPException, ProblemDetailsResponse, Unauthorized
+from fml.errors import InternalServerError, Unauthorized
+from fml.responses import ProblemDetailResponse
 
 
-class TestCustomHTTPException:
+class TestInternalServerError:
     @pytest.fixture
     def exc(self):
-        return CustomHTTPException(detail=None, headers=None)
+        return InternalServerError(detail=None, headers=None)
 
-    def test_raise(self, exc: CustomHTTPException):
+    def test_raise(self, exc: InternalServerError):
         with pytest.raises(HTTPException):
             raise exc
 
@@ -24,7 +24,7 @@ class TestCustomHTTPException:
         assert exc.detail == _detail
         assert exc.type == "https://problems-registry.smartbear.com/server-error/"
         assert repr(exc) == (
-            "CustomHTTPException(status_code=500, "
+            "InternalServerError(status_code=500, "
             f"title='Server Error', detail='{_detail}')"
         )
         assert str(exc) == f"500 Server Error: {_detail}"
@@ -37,7 +37,7 @@ class TestCustomHTTPException:
         ],
     )
     def test_init_detail(self, detail: str | None):
-        exc = CustomHTTPException(detail=detail, headers=None)
+        exc = InternalServerError(detail=detail, headers=None)
 
         assert exc.detail is not None
         assert isinstance(exc.detail, str)
@@ -57,7 +57,7 @@ class TestCustomHTTPException:
         ],
     )
     def test_init(self, headers: dict[str, str] | None):
-        exc = CustomHTTPException(detail=None, headers=headers)
+        exc = InternalServerError(detail=None, headers=headers)
 
         if headers is None:
             assert exc.headers is None
@@ -73,7 +73,7 @@ class TestUnauthorized:
         return Unauthorized(headers=None)
 
     def test_raise(self, exc: Unauthorized):
-        with pytest.raises(CustomHTTPException):
+        with pytest.raises(InternalServerError):
             raise exc
 
     def test_init_default(self, exc):
@@ -97,13 +97,13 @@ class TestUnauthorized:
         assert exc.headers["WWW-Authenticate"] == "Bearer"
 
 
-class TestProblemDetailsResponse:
+class TestProblemDetailResponse:
     @pytest.fixture
     def res(self):
-        return ProblemDetailsResponse(title="default")
+        return ProblemDetailResponse(title="default")
 
-    def test_init_default(self, res: ProblemDetailsResponse):
-        assert isinstance(res, ORJSONResponse)
+    def test_init_default(self, res: ProblemDetailResponse):
+        assert isinstance(res, ProblemDetailResponse)
         assert res.media_type == "application/json"
         assert res.headers["Content-Type"] == "application/problem+json"
 
@@ -124,9 +124,10 @@ class TestProblemDetailsResponse:
     )
     def test_init_headers(self, headers: dict[str, str] | None):
         kwargs: dict[str, str] = {"title": "default"}
-        res = ProblemDetailsResponse(
+        res = ProblemDetailResponse(
             headers=headers,
             background=None,
+            problem_detail=None,
             **kwargs,
         )
 
@@ -151,9 +152,10 @@ class TestProblemDetailsResponse:
     )
     def test_init_background(self, background: BackgroundTask | None):
         kwargs: dict[str, str] = {"title": "default"}
-        res = ProblemDetailsResponse(
+        res = ProblemDetailResponse(
             headers=None,
             background=background,
+            problem_detail=None,
             **kwargs,
         )
 
