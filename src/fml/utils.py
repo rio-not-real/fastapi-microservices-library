@@ -13,9 +13,9 @@ def utc_now_str() -> str:
 
 def dt_to_utc_str(dt: datetime) -> str:
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
+        dt: datetime = dt.replace(tzinfo=UTC)
     else:
-        dt = dt.astimezone(UTC)
+        dt: datetime = dt.astimezone(UTC)
     return dt.isoformat()
 
 

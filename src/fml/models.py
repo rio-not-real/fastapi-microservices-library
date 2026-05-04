@@ -1,4 +1,4 @@
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
 from pydantic import (
     AnyUrl,
@@ -7,6 +7,7 @@ from pydantic import (
     Field,
     PlainSerializer,
     PositiveInt,
+    model_validator,
 )
 from starlette import status
 
@@ -26,6 +27,38 @@ class HealthCheck(CustomBaseModel):
     timestamp: Annotated[
         AwareDatetime, PlainSerializer(dt_to_utc_str, return_type=str)
     ] = utc_now()
+
+
+class Token(CustomBaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class JWTPayload(CustomBaseModel):
+    sub: Annotated[str | None, Field(description="The subject of the JWT")] = None
+    iat: Annotated[
+        PositiveInt | None,
+        Field(
+            description="The time (by the number of seconds since the Epoch)"
+            " at which the JWT was issued",
+            examples=[int(utc_now().timestamp())],
+        ),
+    ]
+    exp: Annotated[
+        PositiveInt | None,
+        Field(
+            description="The expiration time (by the number of seconds since the Epoch)"
+            " on or after which the JWT MUST NOT be accepted for processing",
+        ),
+    ] = None
+
+    @model_validator(mode="after")
+    def check_exp_gt_iat(self) -> Self:
+        if self.iat is None or self.exp is None:
+            return self
+        if self.iat >= self.exp:
+            raise ValueError(f"exp {self.exp!r} must be greater than iss {self.iat!r}")
+        return self
 
 
 class Error(CustomBaseModel):
