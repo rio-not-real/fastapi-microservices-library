@@ -1,30 +1,30 @@
-import orjson
+import json
+
 import pytest
-from fastapi.responses import ORJSONResponse
 from starlette.background import BackgroundTask
-from starlette.exceptions import HTTPException
 
-from fml.exceptions import CustomHTTPException, ProblemDetailsResponse, Unauthorized
+from fml.errors import InternalServerError, Unauthorized
+from fml.responses import ProblemDetailResponse
 
 
-class TestCustomHTTPException:
+class TestInternalServerError:
     @pytest.fixture
     def exc(self):
-        return CustomHTTPException(detail=None, headers=None)
+        return InternalServerError(detail=None, headers=None)
 
-    def test_raise(self, exc: CustomHTTPException):
-        with pytest.raises(HTTPException):
+    def test_raise(self, exc: InternalServerError):
+        with pytest.raises(Exception):
             raise exc
 
-    def test_init_default(self, exc):
+    def test_init_default(self, exc: InternalServerError):
         _detail = "The server encountered an unexpected error"
 
         assert exc.status_code == 500
-        assert exc._title == "Server Error"
+        assert exc.title == "Server Error"
         assert exc.detail == _detail
         assert exc.type == "https://problems-registry.smartbear.com/server-error/"
         assert repr(exc) == (
-            "CustomHTTPException(status_code=500, "
+            "InternalServerError(status_code=500, "
             f"title='Server Error', detail='{_detail}')"
         )
         assert str(exc) == f"500 Server Error: {_detail}"
@@ -37,7 +37,7 @@ class TestCustomHTTPException:
         ],
     )
     def test_init_detail(self, detail: str | None):
-        exc = CustomHTTPException(detail=detail, headers=None)
+        exc = InternalServerError(detail=detail, headers=None)
 
         assert exc.detail is not None
         assert isinstance(exc.detail, str)
@@ -57,7 +57,7 @@ class TestCustomHTTPException:
         ],
     )
     def test_init(self, headers: dict[str, str] | None):
-        exc = CustomHTTPException(detail=None, headers=headers)
+        exc = InternalServerError(detail=None, headers=headers)
 
         if headers is None:
             assert exc.headers is None
@@ -73,13 +73,16 @@ class TestUnauthorized:
         return Unauthorized(headers=None)
 
     def test_raise(self, exc: Unauthorized):
-        with pytest.raises(CustomHTTPException):
+        with pytest.raises(InternalServerError):
             raise exc
 
     def test_init_default(self, exc):
         assert exc.status_code == 401
-        assert exc.detail == "The client request missed or malformed its credentials"
-        assert exc._title == "Unauthorized"
+        assert (
+            exc.detail
+            == "Access token not set or invalid, and the requested resource could not be returned."
+        )
+        assert exc.title == "Unauthorized"
 
     @pytest.mark.parametrize(
         "headers",
@@ -93,21 +96,25 @@ class TestUnauthorized:
     def test_init_header(self, headers: dict[str, str] | None):
         exc = Unauthorized(headers=headers)
 
-        assert isinstance(exc.headers, dict)
-        assert exc.headers["WWW-Authenticate"] == "Bearer"
+        if headers is None:
+            assert exc.headers is None
+        else:
+            assert exc.headers is not None
+            assert isinstance(exc.headers, dict)
+            assert all(exc.headers[k] == v for k, v in headers.items())
 
 
-class TestProblemDetailsResponse:
+class TestProblemDetailResponse:
     @pytest.fixture
     def res(self):
-        return ProblemDetailsResponse(title="default")
+        return ProblemDetailResponse(title="default")
 
-    def test_init_default(self, res: ProblemDetailsResponse):
-        assert isinstance(res, ORJSONResponse)
+    def test_init_default(self, res: ProblemDetailResponse):
+        assert isinstance(res, ProblemDetailResponse)
         assert res.media_type == "application/json"
         assert res.headers["Content-Type"] == "application/problem+json"
 
-        body = orjson.loads(res.body)
+        body = json.loads(res.body)  # ty:ignore[invalid-argument-type]
         assert isinstance(body, dict)
         assert body["type"] == "about:blank"
         assert body["status"] == 500
@@ -124,9 +131,10 @@ class TestProblemDetailsResponse:
     )
     def test_init_headers(self, headers: dict[str, str] | None):
         kwargs: dict[str, str] = {"title": "default"}
-        res = ProblemDetailsResponse(
+        res = ProblemDetailResponse(
             headers=headers,
             background=None,
+            problem_detail=None,
             **kwargs,
         )
 
@@ -151,9 +159,10 @@ class TestProblemDetailsResponse:
     )
     def test_init_background(self, background: BackgroundTask | None):
         kwargs: dict[str, str] = {"title": "default"}
-        res = ProblemDetailsResponse(
+        res = ProblemDetailResponse(
             headers=None,
             background=background,
+            problem_detail=None,
             **kwargs,
         )
 

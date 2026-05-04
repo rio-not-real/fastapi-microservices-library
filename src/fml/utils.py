@@ -1,12 +1,6 @@
 from datetime import UTC, datetime
-from typing import Annotated
 
-from fastapi.params import Header
 from starlette.requests import Request
-
-RequestIdHeader = Annotated[str | None, Header()]
-
-CorrelationIdHeader = Annotated[str | None, Header()]
 
 
 def utc_now() -> datetime:
