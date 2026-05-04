@@ -24,7 +24,7 @@ async def unhandled_exception_handler(
     )
 
 
-async def custom_exception_handler(
+async def fml_exception_handler(
     req: Request, exc: InternalServerError
 ) -> ProblemDetailResponse:
     headers: dict[str, str] | None = (
@@ -55,7 +55,7 @@ async def pydantic_validation_error_handler(
         errors.append(
             Error(
                 detail=err["msg"],
-                pointer=f"/{pointer}" if pointer else None,
+                pointer=pointer if pointer else None,
                 code=err["type"],
             )
         )
