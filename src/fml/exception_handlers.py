@@ -1,0 +1,99 @@
+import logging
+
+from pydantic import BaseModel
+from pydantic import ValidationError as PydanticValidationError
+from starlette import status
+from starlette.background import BackgroundTask
+from starlette.middleware.cors import CORSMiddleware as CORSMiddleware
+from starlette.middleware.gzip import GZipMiddleware as GZipMiddleware
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+from fml.constants import ABOUT_BLANK
+from fml.errors import InternalServerError, Unauthorized
+from fml.models import Error, ProblemDetail
+
+logger = logging.getLogger(__name__)
+
+
+class ProblemDetailResponse(JSONResponse):
+    def __init__(
+        self,
+        headers: dict[str, str] | None = None,
+        background: BackgroundTask | None = None,
+        problem_detail: ProblemDetail | None = None,
+        **kwargs,
+    ) -> None:
+        problem_detail: ProblemDetail = problem_detail or ProblemDetail.model_validate(
+            kwargs, extra="ignore"
+        )
+        headers = headers or {}
+        headers.update({"Content-Type": "application/problem+json"})
+
+        super().__init__(
+            content=problem_detail,
+            status_code=problem_detail.status,
+            headers=headers,
+            media_type=self.media_type,
+            background=background,
+        )
+
+    def render(self, content: BaseModel) -> bytes:
+        return content.model_dump_json(exclude_none=True).encode("utf-8")
+
+
+async def unhandled_exception_handler(
+    req: Request, exc: Exception
+) -> ProblemDetailResponse:
+    logger.exception("Unexpected error occur")
+    _exc = InternalServerError()
+    return ProblemDetailResponse(
+        status=_exc.status_code,
+        title=_exc.title,
+        detail=_exc.detail,
+    )
+
+
+async def custom_exception_handler(
+    req: Request, exc: InternalServerError
+) -> ProblemDetailResponse:
+    headers: dict[str, str] | None = (
+        {"WWW-Authenticate": "Bearer"} if isinstance(exc, Unauthorized) else None
+    )
+
+    return ProblemDetailResponse(
+        headers=headers,
+        status=exc.status_code,
+        title=exc.title,
+        detail=exc.detail,
+        type=exc.type or ABOUT_BLANK,
+    )
+
+
+def encode_json_pointer(field: str) -> str:
+    # ref: https://datatracker.ietf.org/doc/html/rfc6901#section-3
+    return f"/{field.replace('~', '~0').replace('/', '~1')}"
+
+
+async def pydantic_validation_error_handler(
+    req: Request, exc: PydanticValidationError
+) -> ProblemDetailResponse:
+    errors: list[Error] = []
+
+    for err in exc.errors():
+        pointer: str = "".join(encode_json_pointer(str(field)) for field in err["loc"])
+        errors.append(
+            Error(
+                detail=err["msg"],
+                pointer=f"/{pointer}" if pointer else None,
+                code=err["type"],
+            )
+        )
+
+    return ProblemDetailResponse(
+        type="https://errors.pydantic.dev/2/v/",
+        status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        title="Validation Error",
+        detail=str(exc),
+        errors=errors,
+    )
