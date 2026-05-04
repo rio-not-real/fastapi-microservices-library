@@ -259,7 +259,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fastapi", extras = ["standard-no-fastapi-cloud-cli"], specifier = ">=0.116.0" },
+    { name = "fastapi", extras = ["standard-no-fastapi-cloud-cli"], specifier = ">=0.136.1" },
     { name = "orjson", marker = "extra == 'orjson'", specifier = ">=3.2.1" },
 ]
 provides-extras = ["orjson"]

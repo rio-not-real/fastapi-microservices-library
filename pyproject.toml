@@ -20,7 +20,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "fastapi[standard-no-fastapi-cloud-cli]>=0.116.0"
+  "fastapi[standard-no-fastapi-cloud-cli]>=0.136.1"
 ]
 
 [project.optional-dependencies]
