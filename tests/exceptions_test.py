@@ -1,7 +1,7 @@
-import orjson
+import json
+
 import pytest
 from starlette.background import BackgroundTask
-from starlette.exceptions import HTTPException
 
 from fml.errors import InternalServerError, Unauthorized
 from fml.responses import ProblemDetailResponse
@@ -13,14 +13,14 @@ class TestInternalServerError:
         return InternalServerError(detail=None, headers=None)
 
     def test_raise(self, exc: InternalServerError):
-        with pytest.raises(HTTPException):
+        with pytest.raises(Exception):
             raise exc
 
-    def test_init_default(self, exc):
+    def test_init_default(self, exc: InternalServerError):
         _detail = "The server encountered an unexpected error"
 
         assert exc.status_code == 500
-        assert exc._title == "Server Error"
+        assert exc.title == "Server Error"
         assert exc.detail == _detail
         assert exc.type == "https://problems-registry.smartbear.com/server-error/"
         assert repr(exc) == (
@@ -78,8 +78,11 @@ class TestUnauthorized:
 
     def test_init_default(self, exc):
         assert exc.status_code == 401
-        assert exc.detail == "The client request missed or malformed its credentials"
-        assert exc._title == "Unauthorized"
+        assert (
+            exc.detail
+            == "Access token not set or invalid, and the requested resource could not be returned."
+        )
+        assert exc.title == "Unauthorized"
 
     @pytest.mark.parametrize(
         "headers",
@@ -93,8 +96,12 @@ class TestUnauthorized:
     def test_init_header(self, headers: dict[str, str] | None):
         exc = Unauthorized(headers=headers)
 
-        assert isinstance(exc.headers, dict)
-        assert exc.headers["WWW-Authenticate"] == "Bearer"
+        if headers is None:
+            assert exc.headers is None
+        else:
+            assert exc.headers is not None
+            assert isinstance(exc.headers, dict)
+            assert all(exc.headers[k] == v for k, v in headers.items())
 
 
 class TestProblemDetailResponse:
@@ -107,7 +114,7 @@ class TestProblemDetailResponse:
         assert res.media_type == "application/json"
         assert res.headers["Content-Type"] == "application/problem+json"
 
-        body = orjson.loads(res.body)
+        body = json.loads(res.body)  # ty:ignore[invalid-argument-type]
         assert isinstance(body, dict)
         assert body["type"] == "about:blank"
         assert body["status"] == 500

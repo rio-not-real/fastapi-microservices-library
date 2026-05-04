@@ -8,9 +8,9 @@ from starlette.responses import JSONResponse as _JSONResponse
 from fml.models import ProblemDetail
 
 try:
-    import orjson
-except ImportError:
-    orjson = None  # ty:ignore[invalid-assignment]
+    import orjson  # ty:ignore[unresolved-import]
+except ModuleNotFoundError:
+    orjson = None  # ty: ignore[invalid-assignment, unused-ignore-comment, unused-ignore-comment]
 
 
 class JSONResponse(_JSONResponse):
