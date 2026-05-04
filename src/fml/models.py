@@ -17,6 +17,10 @@ from fml.utils import dt_to_utc_str, utc_now
 class CustomBaseModel(BaseModel): ...
 
 
+class Message(CustomBaseModel):
+    message: str
+
+
 class HealthCheck(CustomBaseModel):
     status: Literal["up", "down"]
     timestamp: Annotated[

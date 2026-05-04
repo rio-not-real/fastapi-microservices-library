@@ -1,51 +1,21 @@
 import logging
 
-from pydantic import BaseModel
 from pydantic import ValidationError as PydanticValidationError
 from starlette import status
-from starlette.background import BackgroundTask
-from starlette.middleware.cors import CORSMiddleware as CORSMiddleware
-from starlette.middleware.gzip import GZipMiddleware as GZipMiddleware
 from starlette.requests import Request
-from starlette.responses import JSONResponse
 
 from fml.constants import ABOUT_BLANK
 from fml.errors import InternalServerError, Unauthorized
-from fml.models import Error, ProblemDetail
+from fml.models import Error
+from fml.responses import ProblemDetailResponse
 
 logger = logging.getLogger(__name__)
-
-
-class ProblemDetailResponse(JSONResponse):
-    def __init__(
-        self,
-        headers: dict[str, str] | None = None,
-        background: BackgroundTask | None = None,
-        problem_detail: ProblemDetail | None = None,
-        **kwargs,
-    ) -> None:
-        problem_detail: ProblemDetail = problem_detail or ProblemDetail.model_validate(
-            kwargs, extra="ignore"
-        )
-        headers = headers or {}
-        headers.update({"Content-Type": "application/problem+json"})
-
-        super().__init__(
-            content=problem_detail,
-            status_code=problem_detail.status,
-            headers=headers,
-            media_type=self.media_type,
-            background=background,
-        )
-
-    def render(self, content: BaseModel) -> bytes:
-        return content.model_dump_json(exclude_none=True).encode("utf-8")
 
 
 async def unhandled_exception_handler(
     req: Request, exc: Exception
 ) -> ProblemDetailResponse:
-    logger.exception("Unexpected error occur")
+    logger.exception("Unexpected error occurred")
     _exc = InternalServerError()
     return ProblemDetailResponse(
         status=_exc.status_code,

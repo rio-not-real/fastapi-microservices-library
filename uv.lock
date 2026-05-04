@@ -238,10 +238,14 @@ standard-no-fastapi-cloud-cli = [
 
 [[package]]
 name = "fastapi-microservices-library"
-version = "0.1.0b1"
+version = "0.1.0b2"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi", extra = ["standard-no-fastapi-cloud-cli"] },
+]
+
+[package.optional-dependencies]
+orjson = [
     { name = "orjson" },
 ]
 
@@ -256,8 +260,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fastapi", extras = ["standard-no-fastapi-cloud-cli"], specifier = ">=0.116.0" },
-    { name = "orjson", specifier = ">=3.2.1" },
+    { name = "orjson", marker = "extra == 'orjson'", specifier = ">=3.2.1" },
 ]
+provides-extras = ["orjson"]
 
 [package.metadata.requires-dev]
 dev = [

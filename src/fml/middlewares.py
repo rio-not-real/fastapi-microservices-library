@@ -45,7 +45,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
         try:
             response: Response = await call_next(request)
         except Exception:
-            logger.exception("Unexpected error occur")
+            logger.exception("Unexpected error occurred")
             _exc = InternalServerError()
             return ProblemDetailResponse(
                 status=_exc.status_code,
