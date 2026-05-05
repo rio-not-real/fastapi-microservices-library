@@ -26,7 +26,7 @@ class HealthCheck(CustomBaseModel):
     status: Literal["up", "down"]
     timestamp: Annotated[
         AwareDatetime, PlainSerializer(dt_to_utc_str, return_type=str)
-    ] = utc_now()
+    ] = Field(default_factory=utc_now)
 
 
 class Token(CustomBaseModel):
