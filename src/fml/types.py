@@ -1,3 +1,5 @@
+"""Reusable FastAPI type annotations."""
+
 from typing import Annotated
 
 from fastapi.params import Header

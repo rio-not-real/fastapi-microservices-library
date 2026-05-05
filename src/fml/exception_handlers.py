@@ -1,3 +1,5 @@
+"""Exception handlers that return RFC 9457 problem responses."""
+
 import logging
 
 from pydantic import ValidationError as PydanticValidationError
@@ -15,6 +17,8 @@ logger = logging.getLogger(__name__)
 async def unhandled_exception_handler(
     req: Request, exc: Exception
 ) -> ProblemDetailResponse:
+    """Return a generic problem response for unexpected exceptions."""
+
     logger.exception("Unexpected error occurred")
     _exc = InternalServerError()
     return ProblemDetailResponse(
@@ -27,6 +31,8 @@ async def unhandled_exception_handler(
 async def fml_exception_handler(
     req: Request, exc: InternalServerError
 ) -> ProblemDetailResponse:
+    """Return a problem response for library-defined exceptions."""
+
     headers: dict[str, str] = dict(exc.headers or {})
     if isinstance(exc, Unauthorized) and not any(
         key.lower() == "www-authenticate" for key in headers
@@ -43,6 +49,8 @@ async def fml_exception_handler(
 
 
 def encode_json_pointer(field: str) -> str:
+    """Encode a field name as an RFC 6901 JSON Pointer segment."""
+
     # ref: https://datatracker.ietf.org/doc/html/rfc6901#section-3
     return f"/{field.replace('~', '~0').replace('/', '~1')}"
 
@@ -50,6 +58,8 @@ def encode_json_pointer(field: str) -> str:
 async def pydantic_validation_error_handler(
     req: Request, exc: PydanticValidationError
 ) -> ProblemDetailResponse:
+    """Return a problem response for Pydantic validation errors."""
+
     errors: list[Error] = []
 
     for err in exc.errors():

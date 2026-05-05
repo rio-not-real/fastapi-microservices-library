@@ -1,3 +1,5 @@
+"""JSON response classes for API and problem detail payloads."""
+
 from typing import Any
 
 from pydantic import BaseModel, TypeAdapter
@@ -14,7 +16,11 @@ except ModuleNotFoundError:
 
 
 class JSONResponse(_JSONResponse):
+    """JSON response that serializes Pydantic models and common Python values."""
+
     def render(self, content: Any) -> bytes:
+        """Render response content to JSON bytes."""
+
         if isinstance(content, BaseModel):
             return content.model_dump_json().encode("utf-8")
 
@@ -30,6 +36,8 @@ class JSONResponse(_JSONResponse):
 
 
 class ProblemDetailResponse(JSONResponse):
+    """Response that renders an RFC 9457 problem detail body."""
+
     def __init__(
         self,
         headers: dict[str, str] | None = None,
@@ -56,4 +64,6 @@ class ProblemDetailResponse(JSONResponse):
         )
 
     def render(self, content: BaseModel) -> bytes:
+        """Render problem detail content without null fields."""
+
         return content.model_dump_json(exclude_none=True).encode("utf-8")
