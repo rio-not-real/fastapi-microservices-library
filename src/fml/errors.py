@@ -1,3 +1,8 @@
+"""RFC 9457 Problem Details exception classes based on the SmartBear registry.
+
+ref: https://problems-registry.smartbear.com/
+"""
+
 import logging
 from typing import Mapping
 
@@ -7,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 class InternalServerError(Exception):
+    """Base RFC problem detail exception for API error responses."""
+
     title: str = "Server Error"
     status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR
 
@@ -36,14 +43,8 @@ class InternalServerError(Exception):
         )
 
 
-"""
-SmartBear Problem Details Registry
-ref: https://problems-registry.smartbear.com/
-"""
-
-
 class AlreadyExists(InternalServerError):
-    """This problem occurs when the resource being created is found to already exist on the server"""
+    """Raised when a resource already exists."""
 
     title = "Already Exists"
     status_code = status.HTTP_409_CONFLICT
@@ -51,7 +52,7 @@ class AlreadyExists(InternalServerError):
 
 
 class MissingBodyProperty(InternalServerError):
-    """This problem occurs when the request sent to the API is missing an expected body property"""
+    """Raised when a required request body property is missing."""
 
     title = "Missing Body Property"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -59,7 +60,7 @@ class MissingBodyProperty(InternalServerError):
 
 
 class MissingRequestHeader(InternalServerError):
-    """This problem occurs when the request sent to the API is missing an expected request header"""
+    """Raised when a required request header is missing."""
 
     title = "Missing Request Header"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -67,7 +68,7 @@ class MissingRequestHeader(InternalServerError):
 
 
 class MissingRequestParameter(InternalServerError):
-    """This problem occurs when the request sent to the API is missing an query or path parameter"""
+    """Raised when a required query or path parameter is missing."""
 
     title = "Missing Request Parameter"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -75,7 +76,7 @@ class MissingRequestParameter(InternalServerError):
 
 
 class InvalidBodyPropertyFormat(InternalServerError):
-    """This problem occurs when the request body contain a malformed property"""
+    """Raised when a request body property is malformed."""
 
     title = "Invalid Body Property Format"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -83,7 +84,7 @@ class InvalidBodyPropertyFormat(InternalServerError):
 
 
 class InvalidRequestParameterFormat(InternalServerError):
-    """This problem occurs when the request contains a malformed query or path parameter"""
+    """Raised when a query or path parameter is malformed."""
 
     title = "Invalid Request Parameter Format"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -91,7 +92,7 @@ class InvalidRequestParameterFormat(InternalServerError):
 
 
 class InvalidRequestHeaderFormat(InternalServerError):
-    """This problem occurs when the request contains a malformed request header"""
+    """Raised when a request header is malformed."""
 
     title = "Invalid Request Header Format"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -99,7 +100,7 @@ class InvalidRequestHeaderFormat(InternalServerError):
 
 
 class InvalidBodyPropertyValue(InternalServerError):
-    """This problem occurs when the request body contains a invalid property value"""
+    """Raised when a request body property value is invalid."""
 
     title = "Invalid Body Property Value"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -107,7 +108,7 @@ class InvalidBodyPropertyValue(InternalServerError):
 
 
 class InvalidRequestParameterValue(InternalServerError):
-    """This problem occurs when the request contains a invalid query or path parameter value"""
+    """Raised when a query or path parameter value is invalid."""
 
     title = "Invalid Request Parameter Value"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -115,7 +116,7 @@ class InvalidRequestParameterValue(InternalServerError):
 
 
 class ValidationError(InternalServerError):
-    """This problem occurs when the request is deemed unprocessable"""
+    """Raised when a request is unprocessable."""
 
     title = "Validation Error"
     status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -123,7 +124,7 @@ class ValidationError(InternalServerError):
 
 
 class BusinessRuleViolation(InternalServerError):
-    """This problem occurs when the request is deemed invalid as it fails to meet business rule expectations"""
+    """Raised when a request violates a business rule."""
 
     title = "Business Rule Violation"
     status_code = status.HTTP_422_UNPROCESSABLE_CONTENT
@@ -131,7 +132,7 @@ class BusinessRuleViolation(InternalServerError):
 
 
 class NotFound(InternalServerError):
-    """This problem occurs when the requested resource could not be found"""
+    """Raised when a requested resource does not exist."""
 
     title = "Not Found"
     status_code = status.HTTP_404_NOT_FOUND
@@ -139,9 +140,7 @@ class NotFound(InternalServerError):
 
 
 class Unauthorized(InternalServerError):
-    """This problem occurs when the requested resource could not be returned
-    as the client request lacked valid authentication credentials
-    """
+    """Raised when authentication credentials are missing or invalid."""
 
     title = "Unauthorized"
     status_code = status.HTTP_401_UNAUTHORIZED
@@ -149,9 +148,7 @@ class Unauthorized(InternalServerError):
 
 
 class Forbidden(InternalServerError):
-    """This problem occurs when the requested resource (and/or operation combination)
-    is not authorized for the requesting client (and or authorization context)
-    """
+    """Raised when the authenticated client is not authorized."""
 
     title = "Forbidden"
     status_code = status.HTTP_403_FORBIDDEN
@@ -159,9 +156,7 @@ class Forbidden(InternalServerError):
 
 
 class BadRequest(InternalServerError):
-    """The server cannot or will not process the request due to something that is perceived to be a client error
-    (for example, malformed request syntax, invalid request message framing, or deceptive request routing)
-    """
+    """Raised when a request is invalid or malformed."""
 
     title = "Bad Request"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -169,9 +164,7 @@ class BadRequest(InternalServerError):
 
 
 class InvalidParameters(InternalServerError):
-    """This problem occurs when a client request contains invalid or malformed parameters
-    causing the server to reject the request
-    """
+    """Raised when request parameters are invalid or malformed."""
 
     title = "Invalid Parameters"
     status_code = status.HTTP_400_BAD_REQUEST
@@ -179,9 +172,7 @@ class InvalidParameters(InternalServerError):
 
 
 class ServiceUnavailable(InternalServerError):
-    """This problem occurs when the service requested is currently unavailable
-    and the server is not ready to handle the request
-    """
+    """Raised when the service is not ready to handle the request."""
 
     title = "Service Unavailable"
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE

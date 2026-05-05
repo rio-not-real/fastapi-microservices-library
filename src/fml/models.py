@@ -1,3 +1,5 @@
+"""Pydantic models for common API response bodies."""
+
 from typing import Annotated, Literal, Self
 
 from pydantic import (
@@ -15,14 +17,19 @@ from fml.constants import ABOUT_BLANK
 from fml.utils import dt_to_utc_str, utc_now
 
 
-class CustomBaseModel(BaseModel): ...
+class CustomBaseModel(BaseModel):
+    """Base model for shared library schemas."""
 
 
 class Message(CustomBaseModel):
+    """Simple message response body."""
+
     message: str
 
 
 class HealthCheck(CustomBaseModel):
+    """Health check response body."""
+
     status: Literal["up", "down"]
     timestamp: Annotated[
         AwareDatetime, PlainSerializer(dt_to_utc_str, return_type=str)
@@ -30,11 +37,15 @@ class HealthCheck(CustomBaseModel):
 
 
 class Token(CustomBaseModel):
+    """Bearer token response body."""
+
     access_token: str
     token_type: str = "bearer"
 
 
 class JWTPayload(CustomBaseModel):
+    """Registered JWT claims."""
+
     sub: Annotated[str | None, Field(description="The subject of the JWT")] = None
     iat: Annotated[
         PositiveInt | None,
@@ -54,6 +65,8 @@ class JWTPayload(CustomBaseModel):
 
     @model_validator(mode="after")
     def check_exp_gt_iat(self) -> Self:
+        """Validate that expiration occurs after the issued-at time."""
+
         if self.iat is None or self.exp is None:
             return self
         if self.iat >= self.exp:
@@ -62,7 +75,7 @@ class JWTPayload(CustomBaseModel):
 
 
 class Error(CustomBaseModel):
-    """Provides explicit details on a problem towards an API consumer."""
+    """Detailed error entry for a problem response."""
 
     detail: Annotated[
         str,
@@ -112,10 +125,7 @@ class Error(CustomBaseModel):
 
 
 class ProblemDetail(CustomBaseModel):
-    """An RFC 9457 problem object
-
-    https://www.rfc-editor.org/rfc/rfc9457.html
-    """
+    """RFC 9457 problem detail response body."""
 
     type: Annotated[
         str | AnyUrl,
