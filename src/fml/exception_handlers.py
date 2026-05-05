@@ -27,9 +27,11 @@ async def unhandled_exception_handler(
 async def fml_exception_handler(
     req: Request, exc: InternalServerError
 ) -> ProblemDetailResponse:
-    headers: dict[str, str] | None = (
-        {"WWW-Authenticate": "Bearer"} if isinstance(exc, Unauthorized) else None
-    )
+    headers: dict[str, str] = dict(exc.headers or {})
+    if isinstance(exc, Unauthorized) and not any(
+        key.lower() == "www-authenticate" for key in headers
+    ):
+        headers["WWW-Authenticate"] = "Bearer"
 
     return ProblemDetailResponse(
         headers=headers,
