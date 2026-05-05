@@ -150,6 +150,18 @@ class TestProblemDetailResponse:
             assert all(res.headers[k.lower()] == v for k, v in headers.items())
         assert res.headers["Content-Type"] == "application/problem+json"
 
+    def test_init_replaces_content_type_case_insensitively(self):
+        headers: dict[str, str] = {"content-type": "text/plain"}
+        res = ProblemDetailResponse(title="default", headers=headers)
+
+        content_type_values = [
+            value for key, value in res.raw_headers if key == b"content-type"
+        ]
+
+        assert content_type_values == [b"application/problem+json"]
+        assert res.headers["Content-Type"] == "application/problem+json"
+        assert headers == {"content-type": "text/plain"}
+
     @staticmethod
     async def _async_callable() -> None:
         import asyncio

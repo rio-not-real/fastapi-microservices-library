@@ -40,7 +40,11 @@ class ProblemDetailResponse(JSONResponse):
         self.problem_detail: ProblemDetail = (
             problem_detail or ProblemDetail.model_validate(kwargs, extra="ignore")
         )
-        headers: dict[str, str] = dict(headers or {})
+        headers: dict[str, str] = {
+            key: value
+            for key, value in (headers or {}).items()
+            if key.lower() != "content-type"
+        }
         headers["Content-Type"] = "application/problem+json"
 
         super().__init__(
