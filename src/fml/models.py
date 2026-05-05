@@ -43,7 +43,7 @@ class JWTPayload(CustomBaseModel):
             " at which the JWT was issued",
             examples=[int(utc_now().timestamp())],
         ),
-    ]
+    ] = None
     exp: Annotated[
         PositiveInt | None,
         Field(
