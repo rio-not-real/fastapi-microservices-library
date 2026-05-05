@@ -1,10 +1,17 @@
+import asyncio
 import json
 
 import pytest
 from starlette.background import BackgroundTask
+from starlette.requests import Request
 
-from fml.errors import InternalServerError, Unauthorized
+from fml.errors import InternalServerError, ServiceUnavailable, Unauthorized
+from fml.exception_handlers import fml_exception_handler
 from fml.responses import ProblemDetailResponse
+
+
+def _request() -> Request:
+    return Request({"type": "http", "method": "GET", "path": "/", "headers": []})
 
 
 class TestInternalServerError:
@@ -171,3 +178,25 @@ class TestProblemDetailResponse:
             assert res.background == background
         else:
             assert res.background is None
+
+
+class TestFmlExceptionHandler:
+    def test_preserves_exception_headers(self):
+        res = asyncio.run(
+            fml_exception_handler(
+                _request(),
+                ServiceUnavailable(headers={"Retry-After": "30"}),
+            )
+        )
+
+        assert res.headers["Retry-After"] == "30"
+
+    def test_preserves_unauthorized_www_authenticate_header(self):
+        res = asyncio.run(
+            fml_exception_handler(
+                _request(),
+                Unauthorized(headers={"WWW-Authenticate": "Basic realm=api"}),
+            )
+        )
+
+        assert res.headers["WWW-Authenticate"] == "Basic realm=api"
