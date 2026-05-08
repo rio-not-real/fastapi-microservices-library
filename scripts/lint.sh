@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
-ruff check --diff src tests scripts
-ruff format --check --diff src tests scripts
-ty check src tests scripts --output-format github
+set -e
+set -x
+
+ruff check --diff src tests
+ruff format --check --diff src tests
+ty check src tests --output-format github
+
+set +x

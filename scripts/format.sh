@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
-ruff check --fix src tests scripts
-ruff format src tests scripts
+set -x
+
+ruff check --fix src tests
+ruff format src tests
+
+set +x
