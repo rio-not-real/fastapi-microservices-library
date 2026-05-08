@@ -2,6 +2,7 @@
 
 import logging
 
+from fastapi import FastAPI
 from pydantic import ValidationError as PydanticValidationError
 from starlette import status
 from starlette.requests import Request
@@ -28,6 +29,12 @@ async def unhandled_exception_handler(
     )
 
 
+def add_unhandled_exception_handler(app: FastAPI) -> None:
+    """Register the generic unhandled exception handler on a FastAPI app."""
+
+    app.add_exception_handler(Exception, unhandled_exception_handler)
+
+
 async def fml_exception_handler(
     req: Request, exc: InternalServerError
 ) -> ProblemDetailResponse:
@@ -45,6 +52,15 @@ async def fml_exception_handler(
         title=exc.title,
         detail=exc.detail,
         type=exc.type or ABOUT_BLANK,
+    )
+
+
+def add_fml_exception_handler(app: FastAPI) -> None:
+    """Register the library-defined exception handler on a FastAPI app."""
+
+    app.add_exception_handler(
+        InternalServerError,
+        fml_exception_handler,  # ty:ignore[invalid-argument-type]
     )
 
 
@@ -78,4 +94,13 @@ async def pydantic_validation_error_handler(
         title="Validation Error",
         detail=str(exc),
         errors=errors,
+    )
+
+
+def add_pydantic_validation_error_handler(app: FastAPI) -> None:
+    """Register the Pydantic validation error handler on a FastAPI app."""
+
+    app.add_exception_handler(
+        PydanticValidationError,
+        pydantic_validation_error_handler,  # ty:ignore[invalid-argument-type]
     )
