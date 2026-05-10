@@ -70,7 +70,7 @@ class JWTPayload(CustomBaseModel):
         if self.iat is None or self.exp is None:
             return self
         if self.iat >= self.exp:
-            raise ValueError(f"exp {self.exp!r} must be greater than iss {self.iat!r}")
+            raise ValueError(f"exp {self.exp!r} must be greater than iat {self.iat!r}")
         return self
 
 
